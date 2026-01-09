@@ -1,0 +1,5 @@
+const link = document.createElement("a");
+link.href = data.audio;
+link.download = "narration.mp3";
+link.textContent = "Download Audio";
+audioContainer.appendChild(link);
