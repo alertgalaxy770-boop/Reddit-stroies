@@ -1,0 +1,41 @@
+import express from "express";
+import fetch from "node-fetch";
+import cors from "cors";
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+const ELEVEN_API_KEY = process.env.ELEVEN_API_KEY; // store key as environment variable
+
+app.post("/generate", async (req, res) => {
+  const { text, voice } = req.body;
+  if (!text) return res.status(400).json({ error: "No text provided" });
+
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
+      method: "POST",
+      headers: {
+        "xi-api-key": ELEVEN_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: "eleven_monolingual_v1",
+        voice_settings: { stability: 0.5, similarity_boost: 0.5 }
+      })
+    });
+
+    const buffer = await response.arrayBuffer();
+    const audioBase64 = Buffer.from(buffer).toString("base64");
+
+    res.json({ audio: `data:audio/mpeg;base64,${audioBase64}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to generate audio" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+
